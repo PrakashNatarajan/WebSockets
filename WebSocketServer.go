@@ -11,19 +11,25 @@ func Echo(ws *websocket.Conn) {
     var err error
 
     for {
-        var reply string
+        //var reply string
+        type socketData struct {
+            To string `json:"to"`
+            Msg string `json:"msg"`
+        }
+        reply := &socketData{}
 
-        if err = websocket.Message.Receive(ws, &reply); err != nil {
+        if err = websocket.JSON.Receive(ws, &reply); err != nil {
             fmt.Println("Can't receive")
             break
         }
 
-        fmt.Println("Received back from client: " + reply)
+        fmt.Println("Received back from client: " + reply.Msg)
+        fmt.Println(reply)
 
-        msg := "Received:  " + reply
+        msg := "Received:  " + reply.Msg
         fmt.Println("Sending to client: " + msg)
 
-        if err = websocket.Message.Send(ws, msg); err != nil {
+        if err = websocket.JSON.Send(ws, &reply); err != nil {
             fmt.Println("Can't send")
             break
         }
