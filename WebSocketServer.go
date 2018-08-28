@@ -33,7 +33,7 @@ func Echo(ws *websocket.Conn) {
 func main() {
     http.Handle("/", websocket.Handler(Echo))
     fmt.Println("Started the WebSocketServer with port no: 1234")
-    fmt.Println("Use ctrl + c to shutdown")
+    fmt.Println("Use CTRL + C to shutdown")
     if err := http.ListenAndServe(":1234", nil); err != nil {
         log.Fatal("ListenAndServe:", err)
     }
