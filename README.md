@@ -1,5 +1,9 @@
 # WebSockets
-# Command To Start th WebSocketServer
-# go run WebSocketServer.go
-# Command To Shotdown th WebSocketServer
-# CTRL + C
+Command To Start th WebSocketServer
+<br />
+go run WebSocketServer.go
+<br />
+Command To Shotdown th WebSocketServer
+<br />
+CTRL + C
+<br />
