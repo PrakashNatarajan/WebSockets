@@ -62,12 +62,13 @@ func ChatMessage(ws *websocket.Conn) {
 
         toUserws := registeredClients[reply.ToUsr]
 
-        fmt.Println("Received back from client: " + reply.FrmUsr)
-        fmt.Println(reply)
+        fmt.Println("\n")
         fmt.Println(toUserws)
-
-        msg := "Received:  " + reply.Msg
-        fmt.Println("Sending to client: " + msg)
+        fmt.Println("Received back from client: " + reply.FrmUsr)
+        fmt.Println("Received message: " + reply.Msg)
+        fmt.Println("Sending to client: " + reply.ToUsr)
+        fmt.Println(reply)
+        fmt.Println("\n")
 
         if err = websocket.JSON.Send(toUserws, &reply); err != nil {
             fmt.Println("Can't send")
