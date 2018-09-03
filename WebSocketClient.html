@@ -15,10 +15,10 @@
             regsock = new WebSocket(regwsuri);
 
             regsock.onopen = function() {
-                console.log("connected to Register" + regwsuri);
+                console.log("connected to Register websocket: " + regwsuri);
             }
             chatsock.onopen = function() {
-                console.log("connected to Chat" + chatwsuri);
+                console.log("connected to Chat websocket: " + chatwsuri);
             }
 
             regsock.onclose = function(regerr) {
