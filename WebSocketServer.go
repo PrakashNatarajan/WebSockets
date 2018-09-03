@@ -7,15 +7,18 @@ import (
     "net/http"
 )
 
+    //var reply string
+    type socketData struct {
+        FrmUsr string `json:"frmusr"`
+        ToUsr string `json:"tousr"`
+        Msg string `json:"msg"`
+    }
+
 func Echo(ws *websocket.Conn) {
     var err error
 
     for {
-        //var reply string
-        type socketData struct {
-            To string `json:"to"`
-            Msg string `json:"msg"`
-        }
+        
         reply := &socketData{}
 
         if err = websocket.JSON.Receive(ws, &reply); err != nil {

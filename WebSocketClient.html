@@ -26,7 +26,7 @@
 
         function send() {
             var msg = document.getElementById('message').value;
-            msg = JSON.stringify({to: "client2", msg: msg})
+            msg = JSON.stringify({frmusr: "User1", tousr: "User2", msg: msg})
             sock.send(msg);
         };
     </script>
