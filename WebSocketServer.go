@@ -48,14 +48,14 @@ func RegisterUser(regws *websocket.Conn) {
     }
 }
 
-func ChatMessage(ws *websocket.Conn) {
+func ChatMessage(chatws *websocket.Conn) {
     var err error
 
     for {
         
         reply := &SocketData{}
 
-        if err = websocket.JSON.Receive(ws, &reply); err != nil {
+        if err = websocket.JSON.Receive(chatws, &reply); err != nil {
             fmt.Println("Can't receive for chat")
             break
         }
