@@ -14,16 +14,25 @@
             chatsock = new WebSocket(chatwsuri);
             regsock = new WebSocket(regwsuri);
 
+            regsock.onopen = function() {
+                console.log("connected to Register" + regwsuri);
+            }
             chatsock.onopen = function() {
-                console.log("connected to " + chatwsuri);
+                console.log("connected to Chat" + chatwsuri);
             }
 
-            chatsock.onclose = function(e) {
-                console.log("connection closed (" + e.code + ")");
+            regsock.onclose = function(regerr) {
+                console.log("Register connection closed (" + regerr.code + ")");
+            }
+            chatsock.onclose = function(chaterr) {
+                console.log("Chat connection closed (" + chaterr.code + ")");
             }
 
-            chatsock.onmessage = function(e) {
-                console.log("message received: " + e.data);
+            regsock.onmessage = function(reg) {
+                console.log("Register message received: " + reg.data);
+            }
+            chatsock.onmessage = function(chat) {
+                console.log("Chat message received: " + chat.data);
             }
         };
 
