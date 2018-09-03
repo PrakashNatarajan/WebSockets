@@ -2,40 +2,59 @@
 <head></head>
 <body>
     <script type="text/javascript">
-        var sock = null;
-        var wsuri = "ws://127.0.0.1:1234";
+        var chatsock = null;
+        var chatwsuri = "ws://127.0.0.1:1234/chat";
+        var regsock = null;
+        var regwsuri = "ws://127.0.0.1:1234/reg";
 
         window.onload = function() {
 
             console.log("onload");
 
-            sock = new WebSocket(wsuri);
+            chatsock = new WebSocket(chatwsuri);
+            regsock = new WebSocket(regwsuri);
 
-            sock.onopen = function() {
-                console.log("connected to " + wsuri);
+            chatsock.onopen = function() {
+                console.log("connected to " + chatwsuri);
             }
 
-            sock.onclose = function(e) {
+            chatsock.onclose = function(e) {
                 console.log("connection closed (" + e.code + ")");
             }
 
-            sock.onmessage = function(e) {
+            chatsock.onmessage = function(e) {
                 console.log("message received: " + e.data);
             }
         };
 
-        function send() {
+        function sendmsg() {
+            var frmuser = document.getElementById('fromuser').value;
+            var touser = document.getElementById('touser').value;
             var msg = document.getElementById('message').value;
-            msg = JSON.stringify({frmusr: "User1", tousr: "User2", msg: msg})
-            sock.send(msg);
+            msg = JSON.stringify({frmusr: frmuser, tousr: touser, msg: msg})
+            chatsock.send(msg);
+        };
+        function registerusr() {
+            var usr = document.getElementById('fromuser').value;
+            user = JSON.stringify({user: usr})
+            regsock.send(user);
         };
     </script>
     <h1>WebSocket Echo Test</h1>
     <form>
         <p>
+            UserName: <input id="fromuser" type="text" value="User">
+        </p>
+    </form>
+    <button onclick="registerusr();">Register User</button>
+    <form>
+        <p>
+            ToUser: <input id="touser" type="text" value="User">
+        </p>
+        <p>
             Message: <input id="message" type="text" value="Hello, world!">
         </p>
     </form>
-    <button onclick="send();">Send Message</button>
+    <button onclick="sendmsg();">Send Message</button>
 </body>
 </html>
