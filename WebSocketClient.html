@@ -11,8 +11,8 @@
 
             console.log("onload");
 
-            chatsock = new WebSocket(chatwsuri);
             regsock = new WebSocket(regwsuri);
+            chatsock = new WebSocket(chatwsuri);
 
             regsock.onopen = function() {
                 console.log("connected to Register websocket: " + regwsuri);
@@ -28,12 +28,13 @@
                 console.log("Chat connection closed (" + chaterr.code + ")");
             }
 
-            regsock.onmessage = function(reg) {
-                console.log("Register message received: " + reg.data);
-            }
             chatsock.onmessage = function(chat) {
                 console.log("Chat message received: " + chat.data);
             }
+            regsock.onmessage = function(reg) {
+                console.log("Register message received: " + reg.data);
+            }
+            
         };
 
         function sendmsg() {

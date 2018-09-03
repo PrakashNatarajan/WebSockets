@@ -8,7 +8,7 @@ import (
 )
 
     //var reply string
-    type SocketData struct {
+    type ChatData struct {
         FrmUsr string `json:"frmusr"`
         ToUsr string `json:"tousr"`
         Msg string `json:"msg"`
@@ -53,7 +53,7 @@ func ChatMessage(chatws *websocket.Conn) {
 
     for {
         
-        reply := &SocketData{}
+        reply := &ChatData{}
 
         if err = websocket.JSON.Receive(chatws, &reply); err != nil {
             fmt.Println("Can't receive for chat")
