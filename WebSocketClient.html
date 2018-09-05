@@ -4,62 +4,62 @@
     <script type="text/javascript">
         var chatsock = null;
         var chatwsuri = "ws://127.0.0.1:1234/chat";
-        var regsock = null;
-        var regwsuri = "ws://127.0.0.1:1234/reg";
+        var logsock = null;
+        var logwsuri = "ws://127.0.0.1:1234/login";
 
         window.onload = function() {
 
             console.log("onload");
 
-            regsock = new WebSocket(regwsuri);
+            logsock = new WebSocket(logwsuri);
             chatsock = new WebSocket(chatwsuri);
 
-            regsock.onopen = function() {
-                console.log("connected to Register websocket: " + regwsuri);
+            logsock.onopen = function() {
+                console.log("connected to login websocket: " + logwsuri);
             }
             chatsock.onopen = function() {
                 console.log("connected to Chat websocket: " + chatwsuri);
             }
 
-            regsock.onclose = function(regerr) {
-                console.log("Register connection closed (" + regerr.code + ")");
+            logsock.onclose = function(logerr) {
+                console.log("Login connection closed (" + logerr.code + ")");
             }
             chatsock.onclose = function(chaterr) {
                 console.log("Chat connection closed (" + chaterr.code + ")");
             }
 
-            chatsock.onmessage = function(chat) {
-                console.log("Chat message received: " + chat.data);
+            chatsock.onmessage = function(chatevent) {
+                console.log("Chat message received: " + chatevent.data);
             }
-            regsock.onmessage = function(reg) {
-                console.log("Register message received: " + reg.data);
+            logsock.onmessage = function(logevent) {
+                console.log("login message received: " + logevent.data);
             }
             
         };
 
         function sendmsg() {
-            var frmuser = document.getElementById('fromuser').value;
-            var touser = document.getElementById('touser').value;
+            var sender = document.getElementById('sender').value;
+            var recipient = document.getElementById('recipient').value;
             var msg = document.getElementById('message').value;
-            msg = JSON.stringify({frmusr: frmuser, tousr: touser, msg: msg})
+            msg = JSON.stringify({sender: sender, recipient: recipient, text: msg})
             chatsock.send(msg);
         };
-        function registerusr() {
-            var usr = document.getElementById('fromuser').value;
+        function loginusr() {
+            var usr = document.getElementById('sender').value;
             user = JSON.stringify({user: usr})
-            regsock.send(user);
+            logsock.send(user);
         };
     </script>
     <h1>WebSocket Echo Test</h1>
     <form>
         <p>
-            UserName: <input id="fromuser" type="text" value="User">
+            UserName: <input id="sender" type="text" value="User">
         </p>
     </form>
-    <button onclick="registerusr();">Register User</button>
+    <button onclick="loginusr();">Login User</button>
     <form>
         <p>
-            ToUser: <input id="touser" type="text" value="User">
+            recipient: <input id="recipient" type="text" value="User">
         </p>
         <p>
             Message: <input id="message" type="text" value="Hello, world!">

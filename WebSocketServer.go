@@ -7,20 +7,27 @@ import (
     "net/http"
 )
 
-    //var reply string
-    type ChatData struct {
-        FrmUsr string `json:"frmusr"`
-        ToUsr string `json:"tousr"`
-        Msg string `json:"msg"`
+    //var receive string
+    type Message struct {
+        Sender string `json:"sender"`
+        Recipient string `json:"recipient"`
+        Text string `json:"text"`
     }
 
     type UserData struct {
         UserName string `json:"user"`
     }
 
-    var registeredClients = map[string]*websocket.Conn {}
+    type ReplyData struct {
+        Code int `json:"code"`
+        Status string `json:"status"`
+        Message string `json:"message"`
+    }
 
-func RegisterUser(regws *websocket.Conn) {
+    var loggedinClients = map[string]*websocket.Conn {}
+    var chatClients = map[string]*websocket.Conn {}
+
+func LoginUser(regws *websocket.Conn) {
     var err error
 
     for {
@@ -32,12 +39,12 @@ func RegisterUser(regws *websocket.Conn) {
             break
         }
 
-        registeredClients[usrData.UserName] = regws
+        loggedinClients[usrData.UserName] = regws
         
         fmt.Println("\n")
         fmt.Println("Received from client: " + usrData.UserName)
         fmt.Println(usrData)
-        fmt.Println(registeredClients)
+        fmt.Println(loggedinClients)
         fmt.Println("Sending back to client: " + usrData.UserName)
         fmt.Println("\n")
 
@@ -53,25 +60,37 @@ func ChatMessage(chatws *websocket.Conn) {
 
     for {
         
-        reply := &ChatData{}
+        msgData := &Message{}
 
-        if err = websocket.JSON.Receive(chatws, &reply); err != nil {
+        if err = websocket.JSON.Receive(chatws, &msgData); err != nil {
             fmt.Println("Can't receive for chat")
             break
         }
+        if client := chatClients[msgData.Sender]; client == nil {
+            chatClients[msgData.Sender] = chatws
+        }
 
-        toUserws := registeredClients[reply.ToUsr]
-
+        toUserws := chatClients[msgData.Recipient]
+        if toUserws == nil {
+            toUserws = loggedinClients[msgData.Recipient]
+        }
+        
         fmt.Println("\n")
         fmt.Println(toUserws)
-        fmt.Println("Received from client: " + reply.FrmUsr)
-        fmt.Println("Received message: " + reply.Msg)
-        fmt.Println("Sending to client: " + reply.ToUsr)
-        fmt.Println(reply)
+        fmt.Println("Received from client: " + msgData.Sender)
+        fmt.Println("Received message: " + msgData.Text)
+        fmt.Println("Sending to client: " + msgData.Recipient)
+        fmt.Println(msgData)
         fmt.Println("\n")
 
-        if err = websocket.JSON.Send(toUserws, &reply); err != nil {
-            fmt.Println("Can't send")
+        if err = websocket.JSON.Send(toUserws, &msgData); err != nil {
+            fmt.Println("Can't send to client")
+            break
+        }
+
+        succReply := ReplyData{Code: 200, Status: "Success", Message: "Sent"}
+        if err = websocket.JSON.Send(chatws, &succReply); err != nil {
+            fmt.Println("Can't send to user")
             break
         }
     }
@@ -91,7 +110,7 @@ func HomeTest(ws *websocket.Conn) {
 
 func main() {
     http.Handle("/chat", websocket.Handler(ChatMessage))
-    http.Handle("/reg", websocket.Handler(RegisterUser))
+    http.Handle("/login", websocket.Handler(LoginUser))
     http.Handle("/", websocket.Handler(HomeTest))
     fmt.Println("Started the WebSocketServer with port no: 1234")
     fmt.Println("Use CTRL + C to shutdown")
