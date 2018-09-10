@@ -55,14 +55,6 @@ type Message struct {
 }
 
 
-func (manager *ClientManager) send(message []byte, ignore *Client) {
-    for conn := range manager.clients {
-        if conn != ignore {
-            conn.send <- message
-        }
-    }
-}
-
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application

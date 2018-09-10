@@ -33,6 +33,13 @@ func newClientManager() *ClientManager {
 	}
 }
 
+func (manager *ClientManager) send(message []byte, ignore *Client) {
+    for conn := range manager.clients {
+        if conn != ignore {
+            conn.send <- message
+        }
+    }
+}
 
 func (manager *ClientManager) start() {
     for {
