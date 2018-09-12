@@ -32,6 +32,8 @@ func main() {
     fmt.Println("CTRL+C to shutdown the server")
     flag.Parse()
     manager := newClientManager()
+    database := newDBManager()
+    manager.database = database
     go manager.start()
     http.HandleFunc("/", serveHome)
     http.HandleFunc("/chat", func(res http.ResponseWriter, req *http.Request) {

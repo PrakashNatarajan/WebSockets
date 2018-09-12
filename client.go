@@ -10,6 +10,7 @@ import (
     "encoding/json"
     "github.com/gorilla/websocket"
     "github.com/satori/go.uuid"
+    "fmt"
 )
 
 const (
@@ -47,13 +48,17 @@ type Client struct {
     send chan []byte
 }
 
-
 type Message struct {
+    Guid      string `json:"guid,omitempty"`
     Sender    string `json:"sender,omitempty"`
     Recipient string `json:"recipient,omitempty"`
     Content   string `json:"content,omitempty"`
 }
 
+type ReciContent struct {
+    Recipient string `json:"recipient,omitempty"`
+    Content   string `json:"content,omitempty"`
+}
 
 // readPump pumps messages from the websocket connection to the hub.
 //
@@ -66,6 +71,8 @@ func (client *Client) read(manager *ClientManager) {
         client.socket.Close()
     }()
 
+    var recicont ReciContent
+
     for {
         _, message, err := client.socket.ReadMessage()
         if err != nil {
@@ -73,7 +80,18 @@ func (client *Client) read(manager *ClientManager) {
             client.socket.Close()
             break
         }
-        jsonMessage, _ := json.Marshal(&Message{Sender: client.id, Content: string(message)})
+        err = json.Unmarshal(message, &recicont)
+        if err != nil {
+            fmt.Println("error:", err)
+            manager.unregister <- client
+            client.socket.Close()
+            break
+        }
+        //fmt.Println("recicont:", recicont.Content, "Recipient: ", recicont.Recipient)
+        guid, _ := uuid.NewV4()
+        msgobj := Message{Guid: guid.String(), Sender: client.id, Content: recicont.Content, Recipient: recicont.Recipient}
+        manager.database.CreateRecord(msgobj.Guid, msgobj.Sender, msgobj.Content, msgobj.Recipient)
+        jsonMessage, _ := json.Marshal(&msgobj)
         manager.broadcast <- jsonMessage
     }
 }
@@ -88,6 +106,8 @@ func (client *Client) write(manager *ClientManager) {
         client.socket.Close()
     }()
 
+    var msgcont Message
+
     for {
         select {
         case message, ok := <-client.send:
@@ -95,8 +115,29 @@ func (client *Client) write(manager *ClientManager) {
                 client.socket.WriteMessage(websocket.CloseMessage, []byte{})
                 return
             }
-
-            client.socket.WriteMessage(websocket.TextMessage, message)
+            //fmt.Println(string(message)) //Converts bytes to string as readable format.
+            err := json.Unmarshal(message, &msgcont)
+            if err != nil {
+                fmt.Println("error:", err)
+                manager.unregister <- client
+                client.socket.Close()
+                break
+            }
+            fmt.Println("recicont:", msgcont.Content, "Recipient: ", msgcont.Recipient)
+            msgstatus := manager.database.GetRecordStatus(msgcont.Guid)
+            if msgcont.Sender == "" {
+                client.socket.WriteMessage(websocket.TextMessage, message)
+            } else if msgstatus == "UnSent" {
+                reciClient := manager.regClients[msgcont.Recipient]
+                defer func() {
+                    reciClient.socket.Close()
+                }()
+                reciClient.socket.WriteMessage(websocket.TextMessage, message)
+                manager.database.UpdateRecord(msgcont.Guid, "Sent")
+            } else {
+                return
+            }
+            
         }
     }
 }

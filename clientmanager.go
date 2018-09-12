@@ -22,6 +22,12 @@ type ClientManager struct {
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+    // Register requests from the clients.
+    regClients map[string]*Client
+
+    // Connected Database.
+    database *DBManager
 }
 
 func newClientManager() *ClientManager {
@@ -30,6 +36,8 @@ func newClientManager() *ClientManager {
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
+        regClients: make(map[string]*Client),
+        //database: make(*DBManager),
 	}
 }
 
@@ -46,6 +54,7 @@ func (manager *ClientManager) start() {
         select {
         case conn := <-manager.register:
             manager.clients[conn] = true
+            manager.regClients[conn.id] = conn
             jsonMessage, _ := json.Marshal(&Message{Content: "Id: " + conn.id})
             manager.send(jsonMessage, conn)
         case conn := <-manager.unregister:
