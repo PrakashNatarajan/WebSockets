@@ -72,6 +72,7 @@ func (client *Client) read(manager *ClientManager) {
     }()
 
     var recicont ReciContent
+    database := manager.database
 
     for {
         _, message, err := client.socket.ReadMessage()
@@ -90,7 +91,7 @@ func (client *Client) read(manager *ClientManager) {
         //fmt.Println("recicont:", recicont.Content, "Recipient: ", recicont.Recipient)
         guid, _ := uuid.NewV4()
         msgobj := Message{Guid: guid.String(), Sender: client.id, Content: recicont.Content, Recipient: recicont.Recipient}
-        manager.database.CreateRecord(msgobj.Guid, msgobj.Sender, msgobj.Content, msgobj.Recipient)
+        database.CreateRecord(msgobj.Guid, msgobj.Sender, msgobj.Content, msgobj.Recipient)
         jsonMessage, _ := json.Marshal(&msgobj)
         manager.broadcast <- jsonMessage
     }
@@ -107,7 +108,7 @@ func (client *Client) write(manager *ClientManager) {
     }()
 
     var msgcont Message
-
+    database := manager.database
     for {
         select {
         case message, ok := <-client.send:
@@ -124,7 +125,7 @@ func (client *Client) write(manager *ClientManager) {
                 break
             }
             fmt.Println("recicont:", msgcont.Content, "Recipient: ", msgcont.Recipient)
-            msgstatus := manager.database.GetRecordStatus(msgcont.Guid)
+            msgstatus := database.GetRecordStatus(msgcont.Guid)
             if msgcont.Sender == "" {
                 client.socket.WriteMessage(websocket.TextMessage, message)
             } else if msgstatus == "UnSent" {
@@ -133,7 +134,7 @@ func (client *Client) write(manager *ClientManager) {
                     reciClient.socket.Close()
                 }()
                 reciClient.socket.WriteMessage(websocket.TextMessage, message)
-                manager.database.UpdateRecord(msgcont.Guid, "Sent")
+                database.UpdateRecord(msgcont.Guid, "Sent")
             } else {
                 return
             }
