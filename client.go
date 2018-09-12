@@ -51,12 +51,12 @@ type Client struct {
 type Message struct {
     Guid      string `json:"guid,omitempty"`
     Sender    string `json:"sender,omitempty"`
-    Recipient string `json:"recipient,omitempty"`
+    Receiver string `json:"receiver,omitempty"`
     Content   string `json:"content,omitempty"`
 }
 
 type ReciContent struct {
-    Recipient string `json:"recipient,omitempty"`
+    Receiver string `json:"receiver,omitempty"`
     Content   string `json:"content,omitempty"`
 }
 
@@ -88,10 +88,10 @@ func (client *Client) read(manager *ClientManager) {
             client.socket.Close()
             break
         }
-        //fmt.Println("recicont:", recicont.Content, "Recipient: ", recicont.Recipient)
+        //fmt.Println("recicont:", recicont.Content, "Receiver: ", recicont.Receiver)
         guid, _ := uuid.NewV4()
-        msgobj := Message{Guid: guid.String(), Sender: client.id, Content: recicont.Content, Recipient: recicont.Recipient}
-        database.CreateRecord(msgobj.Guid, msgobj.Sender, msgobj.Content, msgobj.Recipient)
+        msgobj := Message{Guid: guid.String(), Sender: client.id, Content: recicont.Content, Receiver: recicont.Receiver}
+        database.CreateRecord(msgobj.Guid, msgobj.Sender, msgobj.Content, msgobj.Receiver)
         jsonMessage, _ := json.Marshal(&msgobj)
         manager.broadcast <- jsonMessage
     }
@@ -124,17 +124,20 @@ func (client *Client) write(manager *ClientManager) {
                 client.socket.Close()
                 break
             }
-            fmt.Println("recicont:", msgcont.Content, "Recipient: ", msgcont.Recipient)
+            fmt.Println("recicont:", msgcont.Content, "Receiver: ", msgcont.Receiver)
             msgstatus := database.GetRecordStatus(msgcont.Guid)
             if msgcont.Sender == "" {
                 client.socket.WriteMessage(websocket.TextMessage, message)
             } else if msgstatus == "UnSent" {
-                reciClient := manager.regClients[msgcont.Recipient]
+                reciClient := manager.regClients[msgcont.Receiver]
                 defer func() {
                     reciClient.socket.Close()
                 }()
                 reciClient.socket.WriteMessage(websocket.TextMessage, message)
                 database.UpdateRecord(msgcont.Guid, "Sent")
+                for len(client.send) > 0 {
+                    <-client.send
+                }
             } else {
                 return
             }

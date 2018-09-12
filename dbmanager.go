@@ -24,13 +24,13 @@ func newDBManager() *DBManager {
 	}
 }
 
-func (manager *DBManager) CreateRecord(guid, sender, recipient, content string) {
-    statement, err := manager.database.Prepare("INSERT INTO messages (guid, sender, recipient, content, status) VALUES (?, ?, ?, ?, ?)")
+func (manager *DBManager) CreateRecord(guid, sender, receiver, content string) {
+    statement, err := manager.database.Prepare("INSERT INTO messages (guid, sender, receiver, content, status) VALUES (?, ?, ?, ?, ?)")
     if err != nil {
         fmt.Println("Sqlite3 DB Insert Error:", err)
         return
     }
-    statement.Exec(guid, sender, recipient, content, "UnSent")
+    statement.Exec(guid, sender, receiver, content, "UnSent")
 }
 
 func (manager *DBManager) UpdateRecord(guid, status string) {

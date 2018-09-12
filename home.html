@@ -5,7 +5,7 @@
 <script type="text/javascript">
 window.onload = function () {
     var conn;
-    var recipient = document.getElementById("recipient");
+    var receiver = document.getElementById("receiver");
     var content = document.getElementById("content");
     var msgslog = document.getElementById("msgslog");
     var members = document.getElementById("members");
@@ -34,9 +34,9 @@ window.onload = function () {
         if (!content.value) {
             return false;
         }
-        message = JSON.stringify({recipient: recipient.value, content: content.value})
+        message = JSON.stringify({receiver: receiver.value, content: content.value})
         conn.send(message);
-        recipient.value = ""
+        receiver.value = ""
         content.value = "";
         return false;
     };
@@ -139,7 +139,7 @@ body {
     </div>
     <div class="sendmsg">
        <form id="form">
-            Receipent: <input type="text" id="recipient" size="64"/>
+            Receipent: <input type="text" id="receiver" size="64"/>
             <br />
             Content: <input type="text" id="content" size="64"/>
             <br />
