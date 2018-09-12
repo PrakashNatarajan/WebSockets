@@ -34,7 +34,7 @@ func main() {
     manager := newClientManager()
     go manager.start()
     http.HandleFunc("/", serveHome)
-    http.HandleFunc("/ws", func(res http.ResponseWriter, req *http.Request) {
+    http.HandleFunc("/chat", func(res http.ResponseWriter, req *http.Request) {
         serveWs(manager, res, req)
     })
     err := http.ListenAndServe(*addr, nil)

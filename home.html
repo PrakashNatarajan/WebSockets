@@ -5,14 +5,24 @@
 <script type="text/javascript">
 window.onload = function () {
     var conn;
-    var msg = document.getElementById("msg");
-    var log = document.getElementById("log");
+    var recipient = document.getElementById("recipient");
+    var content = document.getElementById("content");
+    var msgslog = document.getElementById("msgslog");
+    var members = document.getElementById("members");
 
-    function appendLog(item) {
-        var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
-        log.appendChild(item);
+    function appendmsgslog(item) {
+        var doScroll = msgslog.scrollTop > msgslog.scrollHeight - msgslog.clientHeight - 1;
+        msgslog.appendChild(item);
         if (doScroll) {
-            log.scrollTop = log.scrollHeight - log.clientHeight;
+            msgslog.scrollTop = msgslog.scrollHeight - msgslog.clientHeight;
+        }
+    }
+
+    function appendmembers(item) {
+        var doScroll = members.scrollTop > members.scrollHeight - members.clientHeight - 1;
+        members.appendChild(item);
+        if (doScroll) {
+            members.scrollTop = members.scrollHeight - members.clientHeight;
         }
     }
 
@@ -20,33 +30,43 @@ window.onload = function () {
         if (!conn) {
             return false;
         }
-        if (!msg.value) {
+        
+        if (!content.value) {
             return false;
         }
-        conn.send(msg.value);
-        msg.value = "";
+        message = JSON.stringify({recipient: recipient.value, content: content.value})
+        conn.send(message);
+        recipient.value = ""
+        content.value = "";
         return false;
     };
 
     if (window["WebSocket"]) {
-        conn = new WebSocket("ws://localhost:12345/ws");
-        conn.onclose = function (evt) {
+        conn = new WebSocket("ws://localhost:12345/chat");
+        conn.onclose = function (event) {
             var item = document.createElement("div");
             item.innerHTML = "<b>Connection closed.</b>";
-            appendLog(item);
+            appendmsgslog(item);
         };
-        conn.onmessage = function (evt) {
-            var messages = evt.data.split('\n');
+        conn.onmessage = function (event) {
+            var messages = event.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
                 var item = document.createElement("div");
-                item.innerText = messages[i];
-                appendLog(item);
+                var msgobj = JSON.parse(messages[i]);
+                console.log(msgobj.sender == null)
+                if (msgobj.sender == null) {
+                    item.innerText = messages[i];
+                    appendmembers(item);
+                } else {
+                    item.innerText = messages[i];
+                    appendmsgslog(item);
+                }
             }
         };
     } else {
         var item = document.createElement("div");
         item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-        appendLog(item);
+        appendmsgslog(item);
     }
 };
 </script>
@@ -64,21 +84,44 @@ body {
     background: gray;
 }
 
-#log {
+.chatblock {
+    width: 100%;
+}
+
+.msgsmbms {
+    width: 100%;
+}
+
+#msgslog {
     background: white;
     margin: 0;
     padding: 0.5em 0.5em 0.5em 0.5em;
     position: absolute;
     top: 0.5em;
-    left: 0.5em;
+    left: 2.5em;
     right: 0.5em;
     bottom: 3em;
     overflow: auto;
+    float: left;
+    width: 45%;
+}
+
+#members {
+    background: white;
+    margin: 0;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    position: absolute;
+    top: 0.5em;
+    left: 41.5em;
+    bottom: 3em;
+    overflow: auto;
+    float: right;
+    width: 45%;
 }
 
 #form {
     padding: 0 0.5em 0 0.5em;
-    margin: 0;
+    margin: 10em 0 0 0;
     position: absolute;
     bottom: 1em;
     left: 0px;
@@ -89,10 +132,23 @@ body {
 </style>
 </head>
 <body>
-<div id="log"></div>
-<form id="form">
-    <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64"/>
-</form>
+<div class="chatblock">
+    <div class="msgsmbms">
+        <div id="msgslog"></div>
+        <div id="members"></div>
+    </div>
+    <div class="sendmsg">
+       <form id="form">
+            Receipent: <input type="text" id="recipient" size="64"/>
+            <br />
+            Content: <input type="text" id="content" size="64"/>
+            <br />
+            <input type="submit" value="Send" />
+        </form> 
+    </div>
+</div>
+
+
+
 </body>
 </html>

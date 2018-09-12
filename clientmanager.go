@@ -46,7 +46,7 @@ func (manager *ClientManager) start() {
         select {
         case conn := <-manager.register:
             manager.clients[conn] = true
-            jsonMessage, _ := json.Marshal(&Message{Content: "/A new socket has connected."})
+            jsonMessage, _ := json.Marshal(&Message{Content: "Id: " + conn.id})
             manager.send(jsonMessage, conn)
         case conn := <-manager.unregister:
             if _, ok := manager.clients[conn]; ok {
