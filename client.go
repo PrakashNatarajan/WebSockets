@@ -106,9 +106,7 @@ func (client *Client) read(manager *ClientManager) {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (client *Client) write(manager *ClientManager) {
-    defer func() {
-        client.socket.Close()
-    }()
+    
 
     var msgcont Message
     var clientIds []string
