@@ -20,7 +20,7 @@ window.onload = function () {
 
     function appendmembers(item) {
         var doScroll = members.scrollTop > members.scrollHeight - members.clientHeight - 1;
-        members.appendChild(item);
+        members.innerHTML = item;
         if (doScroll) {
             members.scrollTop = members.scrollHeight - members.clientHeight;
         }
@@ -55,9 +55,14 @@ window.onload = function () {
                 var msgobj = JSON.parse(messages[i]);
                 console.log(msgobj.sender == null)
                 if (msgobj.sender == null) {
-                    item.innerText = messages[i];
-                    console.log(item)
-                    appendmembers(item);
+                    var memstr = "<ul>"
+                    for (var j = 0; j < msgobj.length; j++) {
+                        if (msgobj[j] != "") {
+                            memstr += "<li>" + msgobj[j] + "</li>"
+                        }
+                    }
+                    memstr += "</ul>"
+                    appendmembers(memstr);
                 } else {
                     item.innerText = messages[i];
                     appendmsgslog(item);
