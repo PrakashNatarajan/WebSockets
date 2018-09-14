@@ -45,7 +45,10 @@ type Client struct {
     socket *websocket.Conn
 
     // Buffered channel of outbound messages.
-    send chan []byte
+    sendMsg chan []byte
+
+    // Buffered channel of outbound clientids.
+    sendIds chan []byte
 }
 
 type Message struct {
@@ -108,10 +111,11 @@ func (client *Client) write(manager *ClientManager) {
     }()
 
     var msgcont Message
+    var clientIds []string
     database := manager.database
     for {
         select {
-        case message, ok := <-client.send:
+        case message, ok := <-client.sendMsg:
             if !ok {
                 client.socket.WriteMessage(websocket.CloseMessage, []byte{})
                 return
@@ -119,29 +123,37 @@ func (client *Client) write(manager *ClientManager) {
             //fmt.Println(string(message)) //Converts bytes to string as readable format.
             err := json.Unmarshal(message, &msgcont)
             if err != nil {
-                fmt.Println("error:", err)
+                fmt.Println("Write function error:", err)
                 manager.unregister <- client
                 client.socket.Close()
                 break
             }
             fmt.Println("recicont:", msgcont.Content, "Receiver: ", msgcont.Receiver)
             msgstatus := database.GetRecordStatus(msgcont.Guid)
-            if msgcont.Sender == "" {
-                client.socket.WriteMessage(websocket.TextMessage, message)
-            } else if msgstatus == "UnSent" {
+            if msgstatus == "UnSent" {
                 reciClient := manager.regClients[msgcont.Receiver]
                 defer func() {
                     reciClient.socket.Close()
                 }()
                 reciClient.socket.WriteMessage(websocket.TextMessage, message)
                 database.UpdateRecord(msgcont.Guid, "Sent")
-                for len(client.send) > 0 {
-                    <-client.send
-                }
             } else {
                 return
             }
-            
+        case message, ok := <-client.sendIds:
+            if !ok {
+                client.socket.WriteMessage(websocket.CloseMessage, []byte{})
+                return
+            }
+            //fmt.Println(string(message)) //Converts bytes to string as readable format.
+            err := json.Unmarshal(message, &clientIds)
+            if err != nil {
+                fmt.Println("Write function error:", err)
+                manager.unregister <- client
+                client.socket.Close()
+                break
+            }
+            client.socket.WriteMessage(websocket.TextMessage, message)
         }
     }
 }
@@ -154,7 +166,7 @@ func serveWs(manager *ClientManager, res http.ResponseWriter, req *http.Request)
         return
     }
     guid, _ := uuid.NewV4()
-    client := &Client{id: guid.String(), socket: conn, send: make(chan []byte)}
+    client := &Client{id: guid.String(), socket: conn, sendMsg: make(chan []byte), sendIds: make(chan []byte)}
 
     manager.register <- client
 

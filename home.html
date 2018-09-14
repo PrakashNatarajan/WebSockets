@@ -56,6 +56,7 @@ window.onload = function () {
                 console.log(msgobj.sender == null)
                 if (msgobj.sender == null) {
                     item.innerText = messages[i];
+                    console.log(item)
                     appendmembers(item);
                 } else {
                     item.innerText = messages[i];
