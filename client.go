@@ -131,11 +131,13 @@ func (client *Client) write(manager *ClientManager) {
             fmt.Println("recicont:", msgcont.Content, "Receiver: ", msgcont.Receiver)
             msgstatus := database.GetRecordStatus(msgcont.Guid)
             if msgstatus == "UnSent" {
+                sentClient := manager.regClients[msgcont.Sender]
                 reciClient := manager.regClients[msgcont.Receiver]
                 defer func() {
                     reciClient.socket.Close()
                 }()
                 reciClient.socket.WriteMessage(websocket.TextMessage, message)
+                sentClient.socket.WriteMessage(websocket.TextMessage, message)
                 database.UpdateRecord(msgcont.Guid, "Sent")
             } else {
                 return
