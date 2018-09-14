@@ -18,9 +18,16 @@ window.onload = function () {
         }
     }
 
-    function appendmembers(item) {
+    function appendmembers(msgobj) {
         var doScroll = members.scrollTop > members.scrollHeight - members.clientHeight - 1;
-        members.innerHTML = item;
+        var memstr = "<ul>"
+        for (var j = 0; j < msgobj.length; j++) {
+            if (msgobj[j] != "") {
+                memstr += "<li>" + msgobj[j] + "</li>"
+            }
+        }
+        memstr += "</ul>"
+        members.innerHTML = memstr;
         if (doScroll) {
             members.scrollTop = members.scrollHeight - members.clientHeight;
         }
@@ -55,14 +62,7 @@ window.onload = function () {
                 var msgobj = JSON.parse(messages[i]);
                 console.log(msgobj.sender == null)
                 if (msgobj.sender == null) {
-                    var memstr = "<ul>"
-                    for (var j = 0; j < msgobj.length; j++) {
-                        if (msgobj[j] != "") {
-                            memstr += "<li>" + msgobj[j] + "</li>"
-                        }
-                    }
-                    memstr += "</ul>"
-                    appendmembers(memstr);
+                    appendmembers(msgobj);
                 } else {
                     item.innerText = messages[i];
                     appendmsgslog(item);
