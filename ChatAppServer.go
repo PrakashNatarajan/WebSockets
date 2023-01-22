@@ -27,6 +27,16 @@ import (
     var loggedinClients = map[string]*websocket.Conn {}
     var chatClients = map[string]*websocket.Conn {}
 
+/*
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(req *http.Request) bool {
+        return true
+    },
+}
+*/
+
 func LoginUser(regws *websocket.Conn) {
     var err error
 
@@ -117,4 +127,7 @@ func main() {
     if err := http.ListenAndServe(":1234", nil); err != nil {
         log.Fatal("ListenAndServe:", err)
     }
+    //if err := http.ListenAndServeTLS(":8000", "cert.pem", "cert.key", nil); err != nil {
+    //    panic("ListenAndServeTLS Error: " + err.Error())
+    //}
 }

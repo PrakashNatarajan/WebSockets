@@ -28,6 +28,10 @@
                 console.log("Chat connection closed (" + chaterr.code + ")");
             }
 
+            logsock.onerror = function(logerr) {
+                console.log(logerr);
+            }
+
             chatsock.onmessage = function(chatevent) {
                 console.log("Chat message received: " + chatevent.data);
             }
