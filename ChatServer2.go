@@ -32,16 +32,18 @@ func messageReadWriter(wsConn *websocket.Conn) {
   }
 }
 
+func echoHandler(resp http.ResponseWriter, req *http.Request) {
+  wsConn, _ := upgrader.Upgrade(resp, req, nil) // error ignored for sake of simplicity
+  fmt.Println(reflect.TypeOf(wsConn))
+  messageReadWriter(wsConn)
+}
+
+func homePage(resp http.ResponseWriter, req *http.Request) {
+  http.ServeFile(resp, req, "WebClient2.html")
+}
+
 func main() {
-  http.HandleFunc("/echo", func(resp http.ResponseWriter, req *http.Request) {
-    wsConn, _ := upgrader.Upgrade(resp, req, nil) // error ignored for sake of simplicity
-    fmt.Println(reflect.TypeOf(wsConn))
-    messageReadWriter(wsConn)
-  })
-
-  http.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
-    http.ServeFile(resp, req, "WebClient2.html")
-  })
-
+  http.HandleFunc("/echo", echoHandler)
+  http.HandleFunc("/", homePage)
   http.ListenAndServe(":8080", nil)
 }
