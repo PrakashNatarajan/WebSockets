@@ -14,6 +14,12 @@ var upgrader = websocket.Upgrader{
 
 var chatConns map[string]*websocket.Conn
 
+type Message struct {
+  Sender string
+  Recipient string
+  Text string
+}
+
 func messageReadWriter(wsConn *websocket.Conn) {
   for {
     // Read message from browser
@@ -32,10 +38,37 @@ func messageReadWriter(wsConn *websocket.Conn) {
   }
 }
 
+func jsonMsgReadWriter(wsConn *websocket.Conn) {
+  for {
+    msg := Message{}
+    // Read message from browser
+    err := wsConn.ReadJSON(&msg)
+    if err != nil {
+      fmt.Println("Error reading json.", err)
+      return
+    }
+
+    // Print the message to the console
+    fmt.Printf("Got message: %#v\n", msg)
+
+    // Write message back to browser
+    if err = wsConn.WriteJSON(msg); err != nil {
+      fmt.Println(err)
+      return
+    }
+  }
+}
+
 func echoHandler(resp http.ResponseWriter, req *http.Request) {
   wsConn, _ := upgrader.Upgrade(resp, req, nil) // error ignored for sake of simplicity
   fmt.Println(reflect.TypeOf(wsConn))
   messageReadWriter(wsConn)
+}
+
+func chatHandler(resp http.ResponseWriter, req *http.Request) {
+  wsConn, _ := upgrader.Upgrade(resp, req, nil) // error ignored for sake of simplicity
+  fmt.Println(reflect.TypeOf(wsConn))
+  jsonMsgReadWriter(wsConn)
 }
 
 func homePage(resp http.ResponseWriter, req *http.Request) {
@@ -44,6 +77,7 @@ func homePage(resp http.ResponseWriter, req *http.Request) {
 
 func main() {
   http.HandleFunc("/echo", echoHandler)
+  http.HandleFunc("/chat", chatHandler)
   http.HandleFunc("/", homePage)
   http.ListenAndServe(":8080", nil)
 }
