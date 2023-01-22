@@ -13,8 +13,8 @@ var upgrader = websocket.Upgrader{
 }
 
 func main() {
-    http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-        conn, _ := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
+    http.HandleFunc("/echo", func(resp http.ResponseWriter, req *http.Request) {
+        conn, _ := upgrader.Upgrade(resp, req, nil) // error ignored for sake of simplicity
 
         for {
             // Read message from browser
@@ -33,8 +33,8 @@ func main() {
         }
     })
 
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        http.ServeFile(w, r, "WebClient2.html")
+    http.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
+        http.ServeFile(resp, req, "WebClient2.html")
     })
 
     http.ListenAndServe(":8080", nil)
