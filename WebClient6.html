@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Go WebSocket Tutorial</title>
+</head>
+<body>
+    <h1>WebSocket Echo Test</h1>
+    <form>
+        <p>
+            UserName: <input id="sender" type="text" value="User">
+        </p>
+    </form>
+    <button onclick="loginusr();">Login User</button>
+    <form>
+        <p>
+            recipient: <input id="recipient" type="text" value="User">
+        </p>
+        <p>
+            Message: <input id="message" type="text" value="Hello, world!">
+        </p>
+    </form>
+    <button onclick="sendmsg();">Send Message</button>
+    <pre id="output"></pre>
+
+    <script type="text/javascript">
+        var output = document.getElementById("output");
+        var chatsock = null;
+        var chatwsuri = "ws://localhost:8080/ws";
+
+        window.onload = function() {
+
+            console.log("onload");
+
+            chatsock = new WebSocket(chatwsuri);
+
+            chatsock.onopen = function() {
+                console.log("connected to Chat websocket: " + chatwsuri);
+            }
+
+            chatsock.onclose = function(chaterr) {
+                console.log("Chat connection closed (" + chaterr.code + ")");
+            }
+
+            chatsock.onmessage = function(chatevent) {
+                console.log("Chat message received: " + chatevent.data);
+                output.innerHTML += "Server: " + JSON.parse(chatevent.data).body + "\n";
+            }
+            
+        };
+
+        function sendmsg() {
+            var sender = document.getElementById('sender').value;
+            var recipient = document.getElementById('recipient').value;
+            var msg = document.getElementById('message').value;
+            msg = JSON.stringify({sender: sender, recipient: recipient, text: msg})
+            chatsock.send(msg);
+        };
+        function loginusr() {
+            var usr = document.getElementById('sender').value;
+            user = JSON.stringify({user: usr})
+            logsock.send(user);
+        };
+    </script>
+    
+</body>
+</html>
