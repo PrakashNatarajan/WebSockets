@@ -102,7 +102,6 @@ func connUpgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error
 
 func serveWs(pool *Pool, w http.ResponseWriter, r *http.Request) {
     fmt.Println("WebSocket Endpoint Hit")
-    //conn, err := websocket.Upgrade(w, r)
     conn, err := connUpgrade(w, r)
     if err != nil {
         fmt.Fprintf(w, "%+v\n", err)
