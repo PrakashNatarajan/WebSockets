@@ -132,11 +132,12 @@ func (pool *Pool)ReceiveQueueMsgs() {
 }
 
 func (pool *Pool)ReceiveSendMsgs(messages <-chan amqp.Delivery) {
-  for msg := range messages {
-    log.Printf("Received a message: %s", msg.Body)
+  for quMsg := range messages {
+    log.Printf("Received a message: %s", quMsg.Body)
     fmt.Println("Sending message to all clients in Pool")
     for client, _ := range pool.Clients {
-        if err := client.Conn.WriteJSON(msg); err != nil {
+        msgData := Message{Type: 1, Body: string(quMsg.Body)}
+        if err := client.Conn.WriteJSON(msgData); err != nil {
             fmt.Println(err)
             return
         }
