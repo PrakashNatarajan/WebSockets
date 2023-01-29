@@ -20,7 +20,7 @@ type Client struct {
 type Pool struct {
   Register   chan *Client
   Unregister chan *Client
-  Clients    map[*Client]bool
+  Clients    map[string]*Client
 }
 
 var upgrader = websocket.Upgrader{
@@ -33,7 +33,7 @@ func NewPool() *Pool {
   return &Pool{
     Register:   make(chan *Client),
     Unregister: make(chan *Client),
-    Clients:    make(map[*Client]bool),
+    Clients:    make(map[string]*Client),
   }
 }
 
@@ -65,18 +65,19 @@ func (pool *Pool) ManageClientConns() {
   for {
     select {
     case client := <-pool.Register:
-      pool.Clients[client] = true
+      pool.Clients[client.Name] = client
       fmt.Println("Size of Connection Pool: ", len(pool.Clients))
-      for client, _ := range pool.Clients {
-        fmt.Println(client)
-        client.Conn.WriteJSON(Message{Type: 1, Body: "New User Joined..."})
+      for clntName, clientSock := range pool.Clients {
+        fmt.Println(clntName)
+        clientSock.Conn.WriteJSON(Message{Type: 1, Body: "New User Joined..."})
       }
       break
     case client := <-pool.Unregister:
-      delete(pool.Clients, client)
+      delete(pool.Clients, client.Name)
       fmt.Println("Size of Connection Pool: ", len(pool.Clients))
-      for client, _ := range pool.Clients {
-        client.Conn.WriteJSON(Message{Type: 1, Body: "User Disconnected..."})
+      for clntName, clientSock := range pool.Clients {
+        fmt.Println(clntName)
+        clientSock.Conn.WriteJSON(Message{Type: 1, Body: "User Disconnected..."})
       }
       break
     }
@@ -138,9 +139,10 @@ func (pool *Pool)ReceiveSendMsgs(messages <-chan amqp.Delivery) {
   for quMsg := range messages {
     log.Printf("Received a message: %s", quMsg.Body)
     fmt.Println("Sending message to all clients in Pool")
-    for client, _ := range pool.Clients {
+    for clntName, clientSock := range pool.Clients {
+      fmt.Println(clntName)
       msgData := Message{Type: 1, Body: string(quMsg.Body)}
-      if err := client.Conn.WriteJSON(msgData); err != nil {
+      if err := clientSock.Conn.WriteJSON(msgData); err != nil {
         fmt.Println(err)
         return
       }
@@ -150,12 +152,14 @@ func (pool *Pool)ReceiveSendMsgs(messages <-chan amqp.Delivery) {
 
 func serveWs(pool *Pool, res http.ResponseWriter, req *http.Request) {
   fmt.Println("WebSocket Endpoint Hit")
+  currUser := req.FormValue("currUser")
   conn, err := connUpgrade(res, req)
   if err != nil {
     fmt.Fprintf(res, "%+v\n", err)
   }
 
   client := &Client{
+    Name: currUser,
     Conn: conn,
     Pool: pool,
   }
