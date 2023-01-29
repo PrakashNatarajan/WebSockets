@@ -74,6 +74,7 @@ func (pool *Pool) ManageClientConns() {
       break
     case client := <-pool.Unregister:
       delete(pool.Clients, client.Name)
+      fmt.Println(client.Name)
       fmt.Println("Size of Connection Pool: ", len(pool.Clients))
       for clntName, clientSock := range pool.Clients {
         fmt.Println(clntName)

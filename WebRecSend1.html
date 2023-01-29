@@ -25,9 +25,11 @@
     <pre id="output"></pre>
 
     <script type="text/javascript">
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        var currUser = urlSearchParams.get('currUser');
         var output = document.getElementById("output");
         var chatsock = null;
-        var chatwsuri = "ws://localhost:8080/ws?currUser=User1";
+        var chatwsuri = "ws://localhost:8080/ws?currUser=" + currUser;
 
         window.onload = function() {
 
