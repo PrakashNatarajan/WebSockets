@@ -3,45 +3,43 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    //"sync"
-    "net/http"
-
-    "github.com/gorilla/websocket"
-    amqp "github.com/rabbitmq/amqp091-go"
+  "fmt"
+  "log"
+  "net/http"
+  "github.com/gorilla/websocket"
+  amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Client struct {
-    ID   string
-    Name string
-    Conn *websocket.Conn
-    Pool *Pool
+  ID   string
+  Name string
+  Conn *websocket.Conn
+  Pool *Pool
 }
 
 type Pool struct {
-    Register   chan *Client
-    Unregister chan *Client
-    Clients    map[*Client]bool
+  Register   chan *Client
+  Unregister chan *Client
+  Clients    map[*Client]bool
 }
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
-    CheckOrigin: func(req *http.Request) bool { return true },
+  ReadBufferSize:  1024,
+  WriteBufferSize: 1024,
+  CheckOrigin: func(req *http.Request) bool { return true },
 }
 
 func NewPool() *Pool {
-    return &Pool{
-        Register:   make(chan *Client),
-        Unregister: make(chan *Client),
-        Clients:    make(map[*Client]bool),
-    }
+  return &Pool{
+    Register:   make(chan *Client),
+    Unregister: make(chan *Client),
+    Clients:    make(map[*Client]bool),
+  }
 }
 
 type Message struct {
-    Type int    `json:"type"`
-    Body string `json:"body"`
+  Type int    `json:"type"`
+  Body string `json:"body"`
 }
 
 func (c *Client) Read() {
@@ -64,35 +62,34 @@ func (c *Client) Read() {
 }
 
 func (pool *Pool) ManageClientConns() {
-    for {
-        select {
-        case client := <-pool.Register:
-            pool.Clients[client] = true
-            fmt.Println("Size of Connection Pool: ", len(pool.Clients))
-            for client, _ := range pool.Clients {
-                fmt.Println(client)
-                client.Conn.WriteJSON(Message{Type: 1, Body: "New User Joined..."})
-            }
-            break
-        case client := <-pool.Unregister:
-            delete(pool.Clients, client)
-            fmt.Println("Size of Connection Pool: ", len(pool.Clients))
-            for client, _ := range pool.Clients {
-                client.Conn.WriteJSON(Message{Type: 1, Body: "User Disconnected..."})
-            }
-            break            
-        }
+  for {
+    select {
+    case client := <-pool.Register:
+      pool.Clients[client] = true
+      fmt.Println("Size of Connection Pool: ", len(pool.Clients))
+      for client, _ := range pool.Clients {
+        fmt.Println(client)
+        client.Conn.WriteJSON(Message{Type: 1, Body: "New User Joined..."})
+      }
+      break
+    case client := <-pool.Unregister:
+      delete(pool.Clients, client)
+      fmt.Println("Size of Connection Pool: ", len(pool.Clients))
+      for client, _ := range pool.Clients {
+        client.Conn.WriteJSON(Message{Type: 1, Body: "User Disconnected..."})
+      }
+      break
     }
+  }
 }
 
 func connUpgrade(res http.ResponseWriter, req *http.Request) (*websocket.Conn, error) {
-    conn, err := upgrader.Upgrade(res, req, nil)
-    if err != nil {
-        log.Println(err)
-        return nil, err
-    }
-
-    return conn, nil
+  conn, err := upgrader.Upgrade(res, req, nil)
+  if err != nil {
+    log.Println(err)
+    return nil, err
+  }
+  return conn, nil
 }
 
 func failOnError(err error, msg string) {
@@ -135,7 +132,6 @@ func (pool *Pool)ReceiveQueueMsgs() {
   )
   failOnError(err, "Failed to receive messages from queue")
   pool.ReceiveSendMsgs(messages)
-
 }
 
 func (pool *Pool)ReceiveSendMsgs(messages <-chan amqp.Delivery) {
@@ -143,29 +139,29 @@ func (pool *Pool)ReceiveSendMsgs(messages <-chan amqp.Delivery) {
     log.Printf("Received a message: %s", quMsg.Body)
     fmt.Println("Sending message to all clients in Pool")
     for client, _ := range pool.Clients {
-        msgData := Message{Type: 1, Body: string(quMsg.Body)}
-        if err := client.Conn.WriteJSON(msgData); err != nil {
-            fmt.Println(err)
-            return
-        }
+      msgData := Message{Type: 1, Body: string(quMsg.Body)}
+      if err := client.Conn.WriteJSON(msgData); err != nil {
+        fmt.Println(err)
+        return
+      }
     }
   }
 }
 
 func serveWs(pool *Pool, res http.ResponseWriter, req *http.Request) {
-    fmt.Println("WebSocket Endpoint Hit")
-    conn, err := connUpgrade(res, req)
-    if err != nil {
-        fmt.Fprintf(res, "%+v\n", err)
-    }
+  fmt.Println("WebSocket Endpoint Hit")
+  conn, err := connUpgrade(res, req)
+  if err != nil {
+    fmt.Fprintf(res, "%+v\n", err)
+  }
 
-    client := &Client{
-        Conn: conn,
-        Pool: pool,
-    }
+  client := &Client{
+    Conn: conn,
+    Pool: pool,
+  }
 
-    pool.Register <- client
-    client.Read()
+  pool.Register <- client
+  client.Read()
 }
 
 func setupRoutes() {
@@ -181,7 +177,7 @@ func setupRoutes() {
 }
 
 func main() {
-    fmt.Println("Distributed Chat App v0.01")
-    setupRoutes()
-    http.ListenAndServe(":8080", nil)
+  fmt.Println("Distributed Chat App v0.01")
+  setupRoutes()
+  http.ListenAndServe(":8080", nil)
 }
