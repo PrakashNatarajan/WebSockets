@@ -49,6 +49,7 @@ func (c *Client) Read() {
             log.Println(err)
             return
         }
+        //[]byte to convert as string string([]byte) []byte is not readable
         message := Message{Type: messageType, Body: string(p)}
         //c.Pool.Broadcast <- message
         fmt.Printf("Message Received: %+v\n", message)
